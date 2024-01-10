@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @Validated
 @RequestMapping("/menu")
@@ -26,13 +27,12 @@ public class MenuController {
 
     @GetMapping("/{itemId}")
     public ResponseEntity<MenuItems> getMenuItemsById(
-            @PathVariable @NotBlank(message = "Item ID cannot be blank") String itemId) {
-        MenuItems menuItems = menuService.getMenuItemsById(itemId);
-        if (menuItems != null) {
-            return new ResponseEntity<>(menuItems, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+            @PathVariable @NotBlank(message = "Item ID cannot be blank") Long itemId) {
+        Optional<MenuItems> optionalMenuItems = menuService.getMenuItemsById(itemId);
+
+        return optionalMenuItems.map(menuItems ->
+                        new ResponseEntity<>(menuItems, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PostMapping("/createMenuItem")
@@ -41,5 +41,15 @@ public class MenuController {
         return new ResponseEntity<>("Menu item created successfully", HttpStatus.CREATED);
     }
 
-    // Additional endpoints for updating or deleting menu items
+    @PutMapping("/updateMenuItem")
+    public ResponseEntity<String> updateMenuItem(@RequestBody @Valid MenuItems menuItem) {
+        menuService.updateMenuItems(menuItem);
+        return new ResponseEntity<>("Menu item updated successfully", HttpStatus.OK);
+    }
+
+    @DeleteMapping("/deleteMenuItem/{itemId}")
+    public ResponseEntity<String> deleteMenuItem(@PathVariable @NotBlank(message = "Item ID cannot be blank") Long itemId) {
+        menuService.deleteMenuItemsById(itemId);
+        return new ResponseEntity<>("Menu item deleted successfully", HttpStatus.OK);
+    }
 }
